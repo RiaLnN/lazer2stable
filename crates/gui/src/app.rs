@@ -444,29 +444,39 @@ impl eframe::App for Lazer2StableApp {
                 ui.add_space(8.0);
                 ui.horizontal(|ui| {
                     if self.is_migrating {
-                        if ui.button(RichText::new("Cancel").color(Color32::from_rgb(255, 80, 80))).clicked() {
+                        if ui.add(
+                            egui::Button::new(RichText::new("Cancel").color(Color32::from_rgb(255, 80, 80)).strong().size(13.0))
+                                .min_size(vec2(130.0, 32.0)),
+                        ).clicked() {
                             self.cancel_migration();
                         }
                     } else {
                         let btn = ui.add(
-                            egui::Button::new(RichText::new("Start Migration").strong().size(14.0))
+                            egui::Button::new(RichText::new("Start Migration").strong().size(13.0))
                                 .fill(Color32::from_rgb(255, 102, 170))
-                                .min_size(vec2(140.0, 32.0)),
+                                .min_size(vec2(130.0, 32.0)),
                         );
                         if btn.clicked() {
                             self.start_migration();
                         }
                     }
 
-                    ui.vertical(|ui| {
-                        ui.label(RichText::new(&self.status_text).strong());
-                        let fraction = if self.progress_total > 0 {
-                            self.progress_current as f32 / self.progress_total as f32
-                        } else {
-                            0.0
-                        };
-                        ui.add(ProgressBar::new(fraction).show_percentage());
-                    });
+                    let right_reserved = 95.0;
+                    let center_width = (ui.available_width() - right_reserved).max(80.0);
+
+                    ui.allocate_ui_with_layout(
+                        vec2(center_width, 32.0),
+                        egui::Layout::top_down(egui::Align::Min),
+                        |ui| {
+                            ui.label(RichText::new(&self.status_text).strong().size(12.0));
+                            let fraction = if self.progress_total > 0 {
+                                self.progress_current as f32 / self.progress_total as f32
+                            } else {
+                                0.0
+                            };
+                            ui.add(ProgressBar::new(fraction).show_percentage());
+                        },
+                    );
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         let log_btn_text = if self.show_logs { "Hide Logs" } else { "Show Logs" };
@@ -491,14 +501,18 @@ impl eframe::App for Lazer2StableApp {
                 }
             });
 
-        // Central tab content
+        // Central tab content with responsive vertical scrolling
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.add_space(10.0);
-            match self.active_tab {
-                ActiveTab::Beatmaps => self.render_beatmaps_tab(ui),
-                ActiveTab::Skins => self.render_skins_tab(ui),
-                ActiveTab::Settings => self.render_settings_tab(ui),
-            }
+            egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                    ui.add_space(8.0);
+                    match self.active_tab {
+                        ActiveTab::Beatmaps => self.render_beatmaps_tab(ui),
+                        ActiveTab::Skins => self.render_skins_tab(ui),
+                        ActiveTab::Settings => self.render_settings_tab(ui),
+                    }
+                });
         });
     }
 }
@@ -529,33 +543,39 @@ impl Lazer2StableApp {
         ui.add_space(6.0);
 
         ui.checkbox(&mut self.config.beatmaps.enabled, "Enable beatmap migration");
-        ui.add_space(10.0);
+        ui.add_space(8.0);
 
-        ui.group(|ui| {
-            ui.label(RichText::new("Import Method").strong());
-            ui.horizontal(|ui| {
-                ui.radio_value(&mut self.config.beatmaps.source_mode, "network".to_string(), "Download via online mirrors (recommended)");
-                ui.radio_value(&mut self.config.beatmaps.source_mode, "local".to_string(), "Assemble offline from lazer cache");
+        // Dim and disable settings when beatmap migration is toggled off
+        ui.add_enabled_ui(self.config.beatmaps.enabled, |ui| {
+            ui.group(|ui| {
+                ui.set_width(ui.available_width());
+                ui.label(RichText::new("Import Method").strong());
+                ui.add_space(4.0);
+                ui.horizontal_wrapped(|ui| {
+                    ui.radio_value(&mut self.config.beatmaps.source_mode, "network".to_string(), "Download via online mirrors (recommended)");
+                    ui.radio_value(&mut self.config.beatmaps.source_mode, "local".to_string(), "Assemble offline from lazer cache");
+                });
+                ui.add_space(8.0);
+
+                ui.label(RichText::new("Delivery Target").strong());
+                ui.add_space(4.0);
+                ui.horizontal_wrapped(|ui| {
+                    ui.radio_value(&mut self.config.beatmaps.delivery_mode, "extract".to_string(), "Extract directly to Songs/ folder (fast)");
+                    ui.radio_value(&mut self.config.beatmaps.delivery_mode, "open".to_string(), "Launch each .osz with osu!.exe");
+                });
             });
-            ui.add_space(6.0);
 
-            ui.label(RichText::new("Delivery Target").strong());
-            ui.horizontal(|ui| {
-                ui.radio_value(&mut self.config.beatmaps.delivery_mode, "extract".to_string(), "Extract directly to Songs/ folder (fast)");
-                ui.radio_value(&mut self.config.beatmaps.delivery_mode, "open".to_string(), "Launch each .osz with osu!.exe");
+            ui.add_space(10.0);
+
+            ui.group(|ui| {
+                ui.set_width(ui.available_width());
+                ui.label(RichText::new("Optimization Filters").strong());
+                ui.add_space(4.0);
+                ui.checkbox(&mut self.config.beatmaps.skip_existing, "Skip beatmaps already installed in stable Songs/");
+                ui.checkbox(&mut self.config.beatmaps.no_video, "Exclude video tracks (saves bandwidth and disk space)");
             });
-        });
 
-        ui.add_space(10.0);
-
-        ui.group(|ui| {
-            ui.label(RichText::new("Optimization Filters").strong());
-            ui.checkbox(&mut self.config.beatmaps.skip_existing, "Skip beatmaps already installed in stable Songs/");
-            ui.checkbox(&mut self.config.beatmaps.no_video, "Exclude video tracks (saves bandwidth and disk space)");
-        });
-
-        ui.add_space(12.0);
-        ui.horizontal(|ui| {
+            ui.add_space(10.0);
             ui.label(format!("Online beatmap sets found in lazer: {}", self.beatmaps.len()));
         });
     }
@@ -565,109 +585,92 @@ impl Lazer2StableApp {
         ui.add_space(6.0);
 
         ui.checkbox(&mut self.config.skins.enabled, "Enable custom skins migration");
-        ui.add_space(6.0);
+        ui.add_space(8.0);
 
-        ui.horizontal(|ui| {
-            ui.checkbox(&mut self.config.skins.unpack_to_stable, "Unpack directly to stable Skins/ folder");
-            ui.checkbox(&mut self.config.skins.export_as_osk, "Save packaged .osk archive to exports");
-        });
+        // Dim and disable settings when skin migration is toggled off
+        ui.add_enabled_ui(self.config.skins.enabled, |ui| {
+            ui.horizontal_wrapped(|ui| {
+                ui.checkbox(&mut self.config.skins.unpack_to_stable, "Unpack directly to stable Skins/ folder");
+                ui.checkbox(&mut self.config.skins.export_as_osk, "Save packaged .osk archive to exports");
+            });
 
-        ui.add_space(10.0);
+            ui.add_space(8.0);
 
-        ui.horizontal(|ui| {
-            if ui.button("Select All").clicked() {
-                self.selected_skins = self.skins.iter().map(|s| s.id.clone()).collect();
-            }
-            if ui.button("Deselect All").clicked() {
-                self.selected_skins.clear();
-            }
-            ui.label(format!("Selected {} of {} skin(s)", self.selected_skins.len(), self.skins.len()));
-        });
-
-        ui.separator();
-
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            if self.skins.is_empty() {
-                ui.label("No custom skins detected in client.realm.");
-            } else {
-                for skin in &self.skins {
-                    let mut is_checked = self.selected_skins.contains(&skin.id);
-                    ui.horizontal(|ui| {
-                        if ui.checkbox(&mut is_checked, "").changed() {
-                            if is_checked {
-                                self.selected_skins.insert(skin.id.clone());
-                            } else {
-                                self.selected_skins.remove(&skin.id);
-                            }
-                        }
-                        ui.label(RichText::new(&skin.name).strong());
-                        ui.label(RichText::new(format!("({} files)", skin.files.len())).weak());
-                        if !skin.creator.is_empty() {
-                            ui.label(RichText::new(format!("by {}", skin.creator)).italics().weak());
-                        }
-                    });
+            ui.horizontal_wrapped(|ui| {
+                if ui.button("Select All").clicked() {
+                    self.selected_skins = self.skins.iter().map(|s| s.id.clone()).collect();
                 }
-            }
+                if ui.button("Deselect All").clicked() {
+                    self.selected_skins.clear();
+                }
+                ui.label(format!("Selected {} of {} skin(s)", self.selected_skins.len(), self.skins.len()));
+            });
+
+            ui.separator();
+
+            egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
+                .max_height(ui.available_height().max(180.0))
+                .show(ui, |ui| {
+                    if self.skins.is_empty() {
+                        ui.label("No custom skins detected in client.realm.");
+                    } else {
+                        for skin in &self.skins {
+                            let mut is_checked = self.selected_skins.contains(&skin.id);
+                            ui.horizontal_wrapped(|ui| {
+                                if ui.checkbox(&mut is_checked, "").changed() {
+                                    if is_checked {
+                                        self.selected_skins.insert(skin.id.clone());
+                                    } else {
+                                        self.selected_skins.remove(&skin.id);
+                                    }
+                                }
+                                ui.label(RichText::new(&skin.name).strong());
+                                ui.label(RichText::new(format!("({} files)", skin.files.len())).weak());
+                                if !skin.creator.is_empty() {
+                                    ui.label(RichText::new(format!("by {}", skin.creator)).italics().weak());
+                                }
+                            });
+                        }
+                    }
+                });
         });
     }
 
     fn render_settings_tab(&mut self, ui: &mut Ui) {
         ui.heading("Settings & Path Configuration");
+        ui.add_space(8.0);
+
+        render_path_field(
+            ui,
+            "Lazer Directory:",
+            &mut self.config.paths.lazer_dir,
+            "Root folder of osu!lazer containing client.realm and files/",
+        );
         ui.add_space(6.0);
 
-        egui::Grid::new("paths_grid").num_columns(3).spacing([10.0, 10.0]).show(ui, |ui| {
-            // Lazer dir
-            ui.label("Lazer Directory:");
-            let mut lazer_str = self.config.paths.lazer_dir.as_ref().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
-            if ui.text_edit_singleline(&mut lazer_str).changed() {
-                self.config.paths.lazer_dir = if lazer_str.is_empty() { None } else { Some(PathBuf::from(lazer_str)) };
-            }
-            if ui.button("Browse...").clicked() {
-                if let Some(folder) = rfd::FileDialog::new().pick_folder() {
-                    self.config.paths.lazer_dir = Some(folder);
-                }
-            }
-            ui.end_row();
+        render_path_field(
+            ui,
+            "Stable Directory:",
+            &mut self.config.paths.stable_dir,
+            "Root folder of osu!stable containing osu!.exe",
+        );
+        ui.add_space(6.0);
 
-            // Stable dir
-            ui.label("Stable Directory:");
-            let mut stable_str = self.config.paths.stable_dir.as_ref().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
-            if ui.text_edit_singleline(&mut stable_str).changed() {
-                self.config.paths.stable_dir = if stable_str.is_empty() { None } else { Some(PathBuf::from(stable_str)) };
-            }
-            if ui.button("Browse...").clicked() {
-                if let Some(folder) = rfd::FileDialog::new().pick_folder() {
-                    self.config.paths.stable_dir = Some(folder);
-                }
-            }
-            ui.end_row();
+        render_path_field(
+            ui,
+            "Songs Folder:",
+            &mut self.config.paths.songs_dir,
+            "Songs directory inside osu!stable",
+        );
+        ui.add_space(6.0);
 
-            // Songs dir
-            ui.label("Songs Folder:");
-            let mut songs_str = self.config.paths.songs_dir.as_ref().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
-            if ui.text_edit_singleline(&mut songs_str).changed() {
-                self.config.paths.songs_dir = if songs_str.is_empty() { None } else { Some(PathBuf::from(songs_str)) };
-            }
-            if ui.button("Browse...").clicked() {
-                if let Some(folder) = rfd::FileDialog::new().pick_folder() {
-                    self.config.paths.songs_dir = Some(folder);
-                }
-            }
-            ui.end_row();
-
-            // Skins dir
-            ui.label("Skins Folder:");
-            let mut skins_str = self.config.paths.skins_dir.as_ref().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
-            if ui.text_edit_singleline(&mut skins_str).changed() {
-                self.config.paths.skins_dir = if skins_str.is_empty() { None } else { Some(PathBuf::from(skins_str)) };
-            }
-            if ui.button("Browse...").clicked() {
-                if let Some(folder) = rfd::FileDialog::new().pick_folder() {
-                    self.config.paths.skins_dir = Some(folder);
-                }
-            }
-            ui.end_row();
-        });
+        render_path_field(
+            ui,
+            "Skins Folder:",
+            &mut self.config.paths.skins_dir,
+            "Skins directory inside osu!stable",
+        );
 
         ui.add_space(14.0);
         ui.separator();
@@ -678,7 +681,7 @@ impl Lazer2StableApp {
             ui.add(egui::Slider::new(&mut self.config.beatmaps.concurrency, 1..=16));
         });
 
-        ui.add_space(10.0);
+        ui.add_space(14.0);
 
         if ui.button(RichText::new("Save Configuration").strong()).clicked() {
             if let Err(e) = self.config.save(&self.config_path) {
@@ -688,4 +691,35 @@ impl Lazer2StableApp {
             }
         }
     }
+}
+
+fn render_path_field(ui: &mut Ui, label: &str, path_opt: &mut Option<PathBuf>, hint: &str) {
+    ui.label(RichText::new(label).strong());
+    ui.horizontal(|ui| {
+        let btn_width = 85.0;
+        let input_width = (ui.available_width() - btn_width - 8.0).max(120.0);
+
+        let mut path_str = path_opt
+            .as_ref()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_default();
+
+        let resp = ui.add_sized(
+            vec2(input_width, 24.0),
+            egui::TextEdit::singleline(&mut path_str).hint_text(hint),
+        );
+        if resp.changed() {
+            *path_opt = if path_str.trim().is_empty() {
+                None
+            } else {
+                Some(PathBuf::from(path_str.trim()))
+            };
+        }
+
+        if ui.add_sized(vec2(btn_width, 24.0), egui::Button::new("Browse...")).clicked() {
+            if let Some(folder) = rfd::FileDialog::new().pick_folder() {
+                *path_opt = Some(folder);
+            }
+        }
+    });
 }

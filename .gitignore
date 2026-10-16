@@ -7,4 +7,5 @@ target/
 *.user
 *.suo
 config.toml
+cache/
 

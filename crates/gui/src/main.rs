@@ -13,8 +13,8 @@ fn main() -> eframe::Result<()> {
 
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([800.0, 580.0])
-            .with_min_inner_size([650.0, 480.0])
+            .with_inner_size([820.0, 600.0])
+            .with_min_inner_size([500.0, 380.0])
             .with_title("lazer2stable - Migration Tool"),
         ..Default::default()
     };
