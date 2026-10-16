@@ -64,7 +64,9 @@ pub fn detect_stable_dir() -> Option<PathBuf> {
         let candidates = [
             home.join(".wine/drive_c/osu!"),
             home.join(".wine/drive_c/Program Files/osu!"),
-            home.join(".wine/drive_c/users").join(whoami()).join("AppData/Local/osu!"),
+            home.join(".wine/drive_c/users")
+                .join(whoami())
+                .join("AppData/Local/osu!"),
             home.join(".local/share/osu-stable"),
             home.join(".osu"),
         ];

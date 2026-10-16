@@ -37,14 +37,15 @@ pub fn build_download_url(source: &str, id: i64, no_video: bool) -> Option<Strin
         }
         "official" => {
             if no_video {
-                Some(format!("https://osu.ppy.sh/beatmapsets/{}/download?noVideo=1", id))
+                Some(format!(
+                    "https://osu.ppy.sh/beatmapsets/{}/download?noVideo=1",
+                    id
+                ))
             } else {
                 Some(format!("https://osu.ppy.sh/beatmapsets/{}/download", id))
             }
         }
-        custom if custom.contains("{id}") => {
-            Some(custom.replace("{id}", &id.to_string()))
-        }
+        custom if custom.contains("{id}") => Some(custom.replace("{id}", &id.to_string())),
         _ => None,
     }
 }
@@ -58,7 +59,10 @@ pub fn create_http_client(osu_session: Option<&str>) -> Result<Client> {
 
     if let Some(session) = osu_session {
         if !session.trim().is_empty() {
-            let cookie = format!("osu_session={}; Domain=osu.ppy.sh; Path=/; Secure; HttpOnly", session.trim());
+            let cookie = format!(
+                "osu_session={}; Domain=osu.ppy.sh; Path=/; Secure; HttpOnly",
+                session.trim()
+            );
             let url = "https://osu.ppy.sh".parse::<reqwest::Url>()?;
             let jar = reqwest::cookie::Jar::default();
             jar.add_cookie_str(&cookie, &url);
@@ -96,7 +100,12 @@ pub async fn download_beatmap(
                 continue;
             };
 
-            debug!("Attempting download of map {} from {} (attempt {})", id, source_name, attempt + 1);
+            debug!(
+                "Attempting download of map {} from {} (attempt {})",
+                id,
+                source_name,
+                attempt + 1
+            );
             match client.get(&url).send().await {
                 Ok(response) => {
                     let status = response.status();
@@ -109,7 +118,11 @@ pub async fn download_beatmap(
                             .unwrap_or(5);
 
                         let wait_time = Duration::from_secs(retry_after_secs.min(60));
-                        warn!("Rate limited (429) on {}. Sleeping for {}s", source_name, wait_time.as_secs());
+                        warn!(
+                            "Rate limited (429) on {}. Sleeping for {}s",
+                            source_name,
+                            wait_time.as_secs()
+                        );
                         sleep(wait_time).await;
                         continue;
                     }
@@ -118,7 +131,11 @@ pub async fn download_beatmap(
                         let mut file = File::create(&temp_osz)?;
                         let bytes = response.bytes().await?;
                         if bytes.len() < 1024 {
-                            last_errors.push(format!("{}: payload too small ({} bytes)", source_name, bytes.len()));
+                            last_errors.push(format!(
+                                "{}: payload too small ({} bytes)",
+                                source_name,
+                                bytes.len()
+                            ));
                             continue;
                         }
                         file.write_all(&bytes)?;
@@ -126,7 +143,10 @@ pub async fn download_beatmap(
 
                         // Rename from partial to final
                         fs::rename(&temp_osz, &target_osz)?;
-                        info!("Successfully downloaded beatmap {} from {}", id, source_name);
+                        info!(
+                            "Successfully downloaded beatmap {} from {}",
+                            id, source_name
+                        );
                         return Ok(target_osz);
                     } else if status == StatusCode::NOT_FOUND {
                         last_errors.push(format!("{}: 404 Not Found", source_name));
@@ -150,5 +170,9 @@ pub async fn download_beatmap(
         let _ = fs::remove_file(&temp_osz);
     }
 
-    bail!("Failed to download beatmap {}: {}", id, last_errors.join("; "))
+    bail!(
+        "Failed to download beatmap {}: {}",
+        id,
+        last_errors.join("; ")
+    )
 }

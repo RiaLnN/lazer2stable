@@ -21,7 +21,10 @@ fn test_locate_lazer_file() {
 
 #[test]
 fn test_sanitize_name() {
-    assert_eq!(sanitize_name("Skin: \"Best\" / <osu!>"), "Skin_ _Best_ _ _osu!_");
+    assert_eq!(
+        sanitize_name("Skin: \"Best\" / <osu!>"),
+        "Skin_ _Best_ _ _osu!_"
+    );
     assert_eq!(sanitize_name("Normal Skin"), "Normal Skin");
 }
 

@@ -25,6 +25,31 @@ pub fn find_bridge_runner(explicit_path: Option<&Path>) -> Result<(PathBuf, Vec<
             if beside_exe.exists() {
                 return Ok((beside_exe, vec![]));
             }
+            let bridge_sub = parent.join("bridge");
+            if bridge_sub.join("realm-bridge").exists() {
+                return Ok((bridge_sub.join("realm-bridge"), vec![]));
+            }
+            if bridge_sub.join("realm-bridge.exe").exists() {
+                return Ok((bridge_sub.join("realm-bridge.exe"), vec![]));
+            }
+            if bridge_sub.join("realm-bridge.dll").exists() {
+                return Ok((
+                    PathBuf::from("dotnet"),
+                    vec![bridge_sub
+                        .join("realm-bridge.dll")
+                        .to_string_lossy()
+                        .to_string()],
+                ));
+            }
+            if parent.join("realm-bridge.dll").exists() {
+                return Ok((
+                    PathBuf::from("dotnet"),
+                    vec![parent
+                        .join("realm-bridge.dll")
+                        .to_string_lossy()
+                        .to_string()],
+                ));
+            }
         }
     }
 
@@ -65,15 +90,15 @@ pub fn find_bridge_runner(explicit_path: Option<&Path>) -> Result<(PathBuf, Vec<
         for candidate in dll_candidates {
             let path = root.join(candidate);
             if path.exists() {
-                return Ok((PathBuf::from("dotnet"), vec![path.to_string_lossy().to_string()]));
+                return Ok((
+                    PathBuf::from("dotnet"),
+                    vec![path.to_string_lossy().to_string()],
+                ));
             }
         }
     }
 
-    let csproj_candidates = [
-        "BeatmapDump.csproj",
-        "bridge/BeatmapDump.csproj",
-    ];
+    let csproj_candidates = ["BeatmapDump.csproj", "bridge/BeatmapDump.csproj"];
 
     for root in &search_roots {
         for candidate in csproj_candidates {
@@ -104,11 +129,18 @@ pub fn run_bridge(
     bridge_binary: Option<&Path>,
 ) -> Result<String> {
     if !realm_path.exists() {
-        bail!("Realm database does not exist at path: {}", realm_path.display());
+        bail!(
+            "Realm database does not exist at path: {}",
+            realm_path.display()
+        );
     }
 
     let (program, base_args) = find_bridge_runner(bridge_binary)?;
-    debug!("Using realm-bridge runner: {} with base args {:?}", program.display(), base_args);
+    debug!(
+        "Using realm-bridge runner: {} with base args {:?}",
+        program.display(),
+        base_args
+    );
 
     let mut cmd = Command::new(&program);
     for arg in &base_args {
@@ -120,16 +152,23 @@ pub fn run_bridge(
 
     info!("Executing realm-bridge command '{}'", command);
     let output = cmd.output().with_context(|| {
-        format!("Failed to execute realm-bridge using '{}'", program.display())
+        format!(
+            "Failed to execute realm-bridge using '{}'",
+            program.display()
+        )
     })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("realm-bridge exited with status {}: {}", output.status, stderr);
+        bail!(
+            "realm-bridge exited with status {}: {}",
+            output.status,
+            stderr
+        );
     }
 
-    let stdout = String::from_utf8(output.stdout)
-        .context("Failed to parse realm-bridge stdout as UTF-8")?;
+    let stdout =
+        String::from_utf8(output.stdout).context("Failed to parse realm-bridge stdout as UTF-8")?;
 
     Ok(stdout)
 }
@@ -146,10 +185,7 @@ pub fn fetch_beatmaps(
 }
 
 /// Fetches all custom skins from client.realm.
-pub fn fetch_skins(
-    realm_path: &Path,
-    bridge_binary: Option<&Path>,
-) -> Result<Vec<SkinDump>> {
+pub fn fetch_skins(realm_path: &Path, bridge_binary: Option<&Path>) -> Result<Vec<SkinDump>> {
     let json_str = run_bridge("dump-skins", realm_path, bridge_binary)?;
     let skins: Vec<SkinDump> = serde_json::from_str(&json_str)
         .context("Failed to deserialize skins JSON from realm-bridge")?;

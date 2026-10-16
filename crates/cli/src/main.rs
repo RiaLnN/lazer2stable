@@ -129,8 +129,16 @@ async fn main() -> Result<()> {
     println!("==================================================");
 
     // Resolve paths
-    let lazer_dir = config.paths.lazer_dir.clone().or_else(detector::detect_lazer_dir);
-    let stable_dir = config.paths.stable_dir.clone().or_else(detector::detect_stable_dir);
+    let lazer_dir = config
+        .paths
+        .lazer_dir
+        .clone()
+        .or_else(detector::detect_lazer_dir);
+    let stable_dir = config
+        .paths
+        .stable_dir
+        .clone()
+        .or_else(detector::detect_stable_dir);
 
     let Some(lazer_dir) = lazer_dir else {
         bail!("Could not detect osu!lazer directory. Please specify with --lazer-dir");
@@ -149,13 +157,17 @@ async fn main() -> Result<()> {
     let files_dir = lazer_dir.join("files");
     let stable_dir_ref = stable_dir.as_deref();
 
-    let songs_dir = config.paths.songs_dir.clone().or_else(|| {
-        stable_dir_ref.map(detector::default_songs_dir)
-    });
+    let songs_dir = config
+        .paths
+        .songs_dir
+        .clone()
+        .or_else(|| stable_dir_ref.map(detector::default_songs_dir));
 
-    let skins_dir = config.paths.skins_dir.clone().or_else(|| {
-        stable_dir_ref.map(detector::default_skins_dir)
-    });
+    let skins_dir = config
+        .paths
+        .skins_dir
+        .clone()
+        .or_else(|| stable_dir_ref.map(detector::default_skins_dir));
 
     println!("Lazer directory : {}", lazer_dir.display());
     println!("Realm database  : {}", realm_path.display());
@@ -206,7 +218,7 @@ async fn main() -> Result<()> {
                     None
                 };
 
-                if let Err(err) = export_skin(&skin, &files_dir, osk_path.as_deref(), target_skins) {
+                if let Err(err) = export_skin(skin, &files_dir, osk_path.as_deref(), target_skins) {
                     eprintln!("\nError exporting skin '{}': {}", skin.name, err);
                 }
                 pb.inc(1);
@@ -247,7 +259,10 @@ async fn main() -> Result<()> {
 
         if args.dry_run {
             for set in &beatmaps {
-                println!(" - [Beatmap] {} - {} ({})", set.artist, set.title, set.online_id);
+                println!(
+                    " - [Beatmap] {} - {} ({})",
+                    set.artist, set.title, set.online_id
+                );
             }
         } else if !beatmaps.is_empty() {
             let Some(ref songs_path) = songs_dir else {
@@ -257,7 +272,9 @@ async fn main() -> Result<()> {
             let pb = ProgressBar::new(beatmaps.len() as u64);
             pb.set_style(
                 ProgressStyle::default_bar()
-                    .template("[{elapsed_precise}] [{bar:40.magenta/purple}] {pos}/{len} ({eta}) {msg}")?
+                    .template(
+                        "[{elapsed_precise}] [{bar:40.magenta/purple}] {pos}/{len} ({eta}) {msg}",
+                    )?
                     .progress_chars("#>-"),
             );
 
@@ -287,14 +304,8 @@ async fn main() -> Result<()> {
                     let _permit = sem.acquire().await.unwrap();
                     pb_clone.set_message(format!("{} - {}", set.artist, set.title));
 
-                    let download_res = download_beatmap(
-                        &client,
-                        set.online_id,
-                        &srcs,
-                        no_video,
-                        &c_dir,
-                        3,
-                    ).await;
+                    let download_res =
+                        download_beatmap(&client, set.online_id, &srcs, no_video, &c_dir, 3).await;
 
                     match download_res {
                         Ok(osz_path) => {
@@ -306,7 +317,8 @@ async fn main() -> Result<()> {
                                     succ.fetch_add(1, Ordering::SeqCst);
                                 }
                             } else {
-                                if let Err(e) = extract_to_songs(&osz_path, &s_path, set.online_id) {
+                                if let Err(e) = extract_to_songs(&osz_path, &s_path, set.online_id)
+                                {
                                     eprintln!("\nFailed to extract osz {}: {}", set.online_id, e);
                                     fail.fetch_add(1, Ordering::SeqCst);
                                 } else {

@@ -28,8 +28,15 @@ pub enum ActiveTab {
 pub enum WorkerEvent {
     Status(String),
     Log(String),
-    Progress { current: usize, total: usize, item_name: String },
-    Done { succeeded: usize, failed: usize },
+    Progress {
+        current: usize,
+        total: usize,
+        item_name: String,
+    },
+    Done {
+        succeeded: usize,
+        failed: usize,
+    },
     Error(String),
     SkinsLoaded(Vec<SkinDump>),
     BeatmapsLoaded(Vec<BeatmapSetDump>),
@@ -107,9 +114,15 @@ impl Lazer2StableApp {
         let config = self.config.clone();
 
         thread::spawn(move || {
-            let lazer_dir = config.paths.lazer_dir.clone().or_else(detector::detect_lazer_dir);
+            let lazer_dir = config
+                .paths
+                .lazer_dir
+                .clone()
+                .or_else(detector::detect_lazer_dir);
             let Some(lazer_dir) = lazer_dir else {
-                let _ = tx.send(WorkerEvent::Error("Could not locate osu!lazer directory".to_string()));
+                let _ = tx.send(WorkerEvent::Error(
+                    "Could not locate osu!lazer directory".to_string(),
+                ));
                 return;
             };
 
@@ -120,7 +133,10 @@ impl Lazer2StableApp {
                 .unwrap_or_else(|| detector::default_realm_path(&lazer_dir));
 
             if !realm_path.is_file() {
-                let _ = tx.send(WorkerEvent::Error(format!("client.realm not found at {}", realm_path.display())));
+                let _ = tx.send(WorkerEvent::Error(format!(
+                    "client.realm not found at {}",
+                    realm_path.display()
+                )));
                 return;
             }
 
@@ -129,7 +145,10 @@ impl Lazer2StableApp {
             // 1. Fetch skins
             match fetch_skins(&realm_path, bridge_bin) {
                 Ok(skins) => {
-                    let _ = tx.send(WorkerEvent::Log(format!("Found {} custom skins in realm", skins.len())));
+                    let _ = tx.send(WorkerEvent::Log(format!(
+                        "Found {} custom skins in realm",
+                        skins.len()
+                    )));
                     let _ = tx.send(WorkerEvent::SkinsLoaded(skins));
                 }
                 Err(e) => {
@@ -140,7 +159,10 @@ impl Lazer2StableApp {
             // 2. Fetch beatmaps
             match fetch_beatmaps(&realm_path, bridge_bin) {
                 Ok(beatmaps) => {
-                    let _ = tx.send(WorkerEvent::Log(format!("Found {} online beatmap sets in realm", beatmaps.len())));
+                    let _ = tx.send(WorkerEvent::Log(format!(
+                        "Found {} online beatmap sets in realm",
+                        beatmaps.len()
+                    )));
                     let _ = tx.send(WorkerEvent::BeatmapsLoaded(beatmaps));
                 }
                 Err(e) => {
@@ -148,7 +170,9 @@ impl Lazer2StableApp {
                 }
             }
 
-            let _ = tx.send(WorkerEvent::Status("Library scanned successfully".to_string()));
+            let _ = tx.send(WorkerEvent::Status(
+                "Library scanned successfully".to_string(),
+            ));
         });
     }
 
@@ -181,29 +205,45 @@ impl Lazer2StableApp {
                 .build();
 
             let Ok(rt) = rt else {
-                let _ = tx.send(WorkerEvent::Error("Failed to initialize async runtime".to_string()));
+                let _ = tx.send(WorkerEvent::Error(
+                    "Failed to initialize async runtime".to_string(),
+                ));
                 return;
             };
 
             rt.block_on(async {
-                let lazer_dir = config.paths.lazer_dir.clone().or_else(detector::detect_lazer_dir);
-                let stable_dir = config.paths.stable_dir.clone().or_else(detector::detect_stable_dir);
+                let lazer_dir = config
+                    .paths
+                    .lazer_dir
+                    .clone()
+                    .or_else(detector::detect_lazer_dir);
+                let stable_dir = config
+                    .paths
+                    .stable_dir
+                    .clone()
+                    .or_else(detector::detect_stable_dir);
 
                 let Some(lazer_dir) = lazer_dir else {
-                    let _ = tx.send(WorkerEvent::Error("osu!lazer directory not found".to_string()));
+                    let _ = tx.send(WorkerEvent::Error(
+                        "osu!lazer directory not found".to_string(),
+                    ));
                     return;
                 };
 
                 let files_dir = lazer_dir.join("files");
                 let stable_dir_ref = stable_dir.as_deref();
 
-                let songs_dir = config.paths.songs_dir.clone().or_else(|| {
-                    stable_dir_ref.map(detector::default_songs_dir)
-                });
+                let songs_dir = config
+                    .paths
+                    .songs_dir
+                    .clone()
+                    .or_else(|| stable_dir_ref.map(detector::default_songs_dir));
 
-                let skins_dir = config.paths.skins_dir.clone().or_else(|| {
-                    stable_dir_ref.map(detector::default_skins_dir)
-                });
+                let skins_dir = config
+                    .paths
+                    .skins_dir
+                    .clone()
+                    .or_else(|| stable_dir_ref.map(detector::default_skins_dir));
 
                 let mut total_succeeded = 0;
                 let mut total_failed = 0;
@@ -216,7 +256,8 @@ impl Lazer2StableApp {
 
                     for (idx, skin) in skins_to_export.into_iter().enumerate() {
                         if cancel.load(Ordering::SeqCst) {
-                            let _ = tx.send(WorkerEvent::Log("Migration cancelled by user.".to_string()));
+                            let _ = tx
+                                .send(WorkerEvent::Log("Migration cancelled by user.".to_string()));
                             break;
                         }
 
@@ -242,18 +283,27 @@ impl Lazer2StableApp {
                         match export_skin(&skin, &files_dir, osk_path.as_deref(), target_skins) {
                             Ok(()) => {
                                 total_succeeded += 1;
-                                let _ = tx.send(WorkerEvent::Log(format!("Exported skin: {}", skin.name)));
+                                let _ = tx.send(WorkerEvent::Log(format!(
+                                    "Exported skin: {}",
+                                    skin.name
+                                )));
                             }
                             Err(e) => {
                                 total_failed += 1;
-                                let _ = tx.send(WorkerEvent::Log(format!("Error exporting skin {}: {}", skin.name, e)));
+                                let _ = tx.send(WorkerEvent::Log(format!(
+                                    "Error exporting skin {}: {}",
+                                    skin.name, e
+                                )));
                             }
                         }
                     }
                 }
 
                 // 2. Migrate Beatmaps
-                if config.beatmaps.enabled && !beatmaps_to_export.is_empty() && !cancel.load(Ordering::SeqCst) {
+                if config.beatmaps.enabled
+                    && !beatmaps_to_export.is_empty()
+                    && !cancel.load(Ordering::SeqCst)
+                {
                     let _ = tx.send(WorkerEvent::Status("Migrating beatmaps...".to_string()));
 
                     let mut beatmaps = beatmaps_to_export;
@@ -265,18 +315,26 @@ impl Lazer2StableApp {
                     }
 
                     let total_maps = beatmaps.len();
-                    let _ = tx.send(WorkerEvent::Log(format!("Beatmaps to download/extract: {}", total_maps)));
+                    let _ = tx.send(WorkerEvent::Log(format!(
+                        "Beatmaps to download/extract: {}",
+                        total_maps
+                    )));
 
                     if let Some(ref s_path) = songs_dir {
-                        let http_client = match create_http_client(config.beatmaps.osu_session.as_deref()) {
-                            Ok(c) => c,
-                            Err(e) => {
-                                let _ = tx.send(WorkerEvent::Error(format!("Failed to build HTTP client: {}", e)));
-                                return;
-                            }
-                        };
+                        let http_client =
+                            match create_http_client(config.beatmaps.osu_session.as_deref()) {
+                                Ok(c) => c,
+                                Err(e) => {
+                                    let _ = tx.send(WorkerEvent::Error(format!(
+                                        "Failed to build HTTP client: {}",
+                                        e
+                                    )));
+                                    return;
+                                }
+                            };
 
-                        let semaphore = Arc::new(Semaphore::new(config.beatmaps.concurrency.max(1)));
+                        let semaphore =
+                            Arc::new(Semaphore::new(config.beatmaps.concurrency.max(1)));
                         let cache_dir = config.paths.cache_dir.join("osz");
                         let delivery_mode = config.beatmaps.delivery_mode.clone();
                         let sources = config.beatmaps.sources.clone();
@@ -301,21 +359,30 @@ impl Lazer2StableApp {
                                 no_video,
                                 &cache_dir,
                                 3,
-                            ).await;
+                            )
+                            .await;
 
                             match dl_res {
                                 Ok(osz_path) => {
                                     if delivery_mode == "open" {
                                         if let Err(e) = open_in_stable(&osz_path, None) {
                                             total_failed += 1;
-                                            let _ = tx.send(WorkerEvent::Log(format!("Failed to open osz {}: {}", set.online_id, e)));
+                                            let _ = tx.send(WorkerEvent::Log(format!(
+                                                "Failed to open osz {}: {}",
+                                                set.online_id, e
+                                            )));
                                         } else {
                                             total_succeeded += 1;
                                         }
                                     } else {
-                                        if let Err(e) = extract_to_songs(&osz_path, s_path, set.online_id) {
+                                        if let Err(e) =
+                                            extract_to_songs(&osz_path, s_path, set.online_id)
+                                        {
                                             total_failed += 1;
-                                            let _ = tx.send(WorkerEvent::Log(format!("Failed to extract osz {}: {}", set.online_id, e)));
+                                            let _ = tx.send(WorkerEvent::Log(format!(
+                                                "Failed to extract osz {}: {}",
+                                                set.online_id, e
+                                            )));
                                         } else {
                                             total_succeeded += 1;
                                         }
@@ -323,12 +390,17 @@ impl Lazer2StableApp {
                                 }
                                 Err(err) => {
                                     total_failed += 1;
-                                    let _ = tx.send(WorkerEvent::Log(format!("Download failed for set {}: {}", set.online_id, err)));
+                                    let _ = tx.send(WorkerEvent::Log(format!(
+                                        "Download failed for set {}: {}",
+                                        set.online_id, err
+                                    )));
                                 }
                             }
                         }
                     } else {
-                        let _ = tx.send(WorkerEvent::Error("Songs directory not specified".to_string()));
+                        let _ = tx.send(WorkerEvent::Error(
+                            "Songs directory not specified".to_string(),
+                        ));
                     }
                 }
 
@@ -358,15 +430,23 @@ impl Lazer2StableApp {
                 WorkerEvent::Log(msg) => {
                     self.logs.push(msg);
                 }
-                WorkerEvent::Progress { current, total, item_name } => {
+                WorkerEvent::Progress {
+                    current,
+                    total,
+                    item_name,
+                } => {
                     self.progress_current = current;
                     self.progress_total = total;
                     self.status_text = format!("{}/{} - {}", current, total, item_name);
                 }
                 WorkerEvent::Done { succeeded, failed } => {
                     self.is_migrating = false;
-                    self.status_text = format!("Finished! Succeeded: {}, Failed: {}", succeeded, failed);
-                    self.logs.push(format!("Migration finished. Succeeded: {}, Failed: {}", succeeded, failed));
+                    self.status_text =
+                        format!("Finished! Succeeded: {}, Failed: {}", succeeded, failed);
+                    self.logs.push(format!(
+                        "Migration finished. Succeeded: {}, Failed: {}",
+                        succeeded, failed
+                    ));
                 }
                 WorkerEvent::Error(err) => {
                     self.is_migrating = false;
@@ -409,7 +489,11 @@ impl eframe::App for Lazer2StableApp {
             .show(ctx, |ui| {
                 ui.add_space(8.0);
                 ui.horizontal(|ui| {
-                    ui.heading(RichText::new("lazer2stable").strong().color(Color32::from_rgb(255, 102, 170)));
+                    ui.heading(
+                        RichText::new("lazer2stable")
+                            .strong()
+                            .color(Color32::from_rgb(255, 102, 170)),
+                    );
                     ui.label(RichText::new("v2.0").weak());
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
@@ -430,9 +514,27 @@ impl eframe::App for Lazer2StableApp {
                     let beatmaps_label = format!("Beatmaps ({})", self.beatmaps.len());
                     let skins_label = format!("Skins ({})", self.skins.len());
 
-                    tab_button(ui, &mut self.active_tab, ActiveTab::Beatmaps, ICON_BEATMAPS, &beatmaps_label);
-                    tab_button(ui, &mut self.active_tab, ActiveTab::Skins, ICON_SKINS, &skins_label);
-                    tab_button(ui, &mut self.active_tab, ActiveTab::Settings, ICON_SETTINGS, "Settings");
+                    tab_button(
+                        ui,
+                        &mut self.active_tab,
+                        ActiveTab::Beatmaps,
+                        ICON_BEATMAPS,
+                        &beatmaps_label,
+                    );
+                    tab_button(
+                        ui,
+                        &mut self.active_tab,
+                        ActiveTab::Skins,
+                        ICON_SKINS,
+                        &skins_label,
+                    );
+                    tab_button(
+                        ui,
+                        &mut self.active_tab,
+                        ActiveTab::Settings,
+                        ICON_SETTINGS,
+                        "Settings",
+                    );
                 });
                 ui.add_space(4.0);
             });
@@ -444,10 +546,18 @@ impl eframe::App for Lazer2StableApp {
                 ui.add_space(8.0);
                 ui.horizontal(|ui| {
                     if self.is_migrating {
-                        if ui.add(
-                            egui::Button::new(RichText::new("Cancel").color(Color32::from_rgb(255, 80, 80)).strong().size(13.0))
+                        if ui
+                            .add(
+                                egui::Button::new(
+                                    RichText::new("Cancel")
+                                        .color(Color32::from_rgb(255, 80, 80))
+                                        .strong()
+                                        .size(13.0),
+                                )
                                 .min_size(vec2(130.0, 32.0)),
-                        ).clicked() {
+                            )
+                            .clicked()
+                        {
                             self.cancel_migration();
                         }
                     } else {
@@ -479,7 +589,11 @@ impl eframe::App for Lazer2StableApp {
                     );
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        let log_btn_text = if self.show_logs { "Hide Logs" } else { "Show Logs" };
+                        let log_btn_text = if self.show_logs {
+                            "Hide Logs"
+                        } else {
+                            "Show Logs"
+                        };
                         if ui.button(log_btn_text).clicked() {
                             self.show_logs = !self.show_logs;
                         }
@@ -517,10 +631,18 @@ impl eframe::App for Lazer2StableApp {
     }
 }
 
-fn tab_button(ui: &mut Ui, active: &mut ActiveTab, tab: ActiveTab, icon: egui::ImageSource<'_>, label: &str) {
+fn tab_button(
+    ui: &mut Ui,
+    active: &mut ActiveTab,
+    tab: ActiveTab,
+    icon: egui::ImageSource<'_>,
+    label: &str,
+) {
     let is_selected = *active == tab;
     let text = if is_selected {
-        RichText::new(label).strong().color(Color32::from_rgb(255, 102, 170))
+        RichText::new(label)
+            .strong()
+            .color(Color32::from_rgb(255, 102, 170))
     } else {
         RichText::new(label).color(Color32::from_rgb(170, 170, 185))
     };
@@ -542,7 +664,10 @@ impl Lazer2StableApp {
         ui.heading("Beatmaps Migration");
         ui.add_space(6.0);
 
-        ui.checkbox(&mut self.config.beatmaps.enabled, "Enable beatmap migration");
+        ui.checkbox(
+            &mut self.config.beatmaps.enabled,
+            "Enable beatmap migration",
+        );
         ui.add_space(8.0);
 
         // Dim and disable settings when beatmap migration is toggled off
@@ -552,16 +677,32 @@ impl Lazer2StableApp {
                 ui.label(RichText::new("Import Method").strong());
                 ui.add_space(4.0);
                 ui.horizontal_wrapped(|ui| {
-                    ui.radio_value(&mut self.config.beatmaps.source_mode, "network".to_string(), "Download via online mirrors (recommended)");
-                    ui.radio_value(&mut self.config.beatmaps.source_mode, "local".to_string(), "Assemble offline from lazer cache");
+                    ui.radio_value(
+                        &mut self.config.beatmaps.source_mode,
+                        "network".to_string(),
+                        "Download via online mirrors (recommended)",
+                    );
+                    ui.radio_value(
+                        &mut self.config.beatmaps.source_mode,
+                        "local".to_string(),
+                        "Assemble offline from lazer cache",
+                    );
                 });
                 ui.add_space(8.0);
 
                 ui.label(RichText::new("Delivery Target").strong());
                 ui.add_space(4.0);
                 ui.horizontal_wrapped(|ui| {
-                    ui.radio_value(&mut self.config.beatmaps.delivery_mode, "extract".to_string(), "Extract directly to Songs/ folder (fast)");
-                    ui.radio_value(&mut self.config.beatmaps.delivery_mode, "open".to_string(), "Launch each .osz with osu!.exe");
+                    ui.radio_value(
+                        &mut self.config.beatmaps.delivery_mode,
+                        "extract".to_string(),
+                        "Extract directly to Songs/ folder (fast)",
+                    );
+                    ui.radio_value(
+                        &mut self.config.beatmaps.delivery_mode,
+                        "open".to_string(),
+                        "Launch each .osz with osu!.exe",
+                    );
                 });
             });
 
@@ -571,12 +712,21 @@ impl Lazer2StableApp {
                 ui.set_width(ui.available_width());
                 ui.label(RichText::new("Optimization Filters").strong());
                 ui.add_space(4.0);
-                ui.checkbox(&mut self.config.beatmaps.skip_existing, "Skip beatmaps already installed in stable Songs/");
-                ui.checkbox(&mut self.config.beatmaps.no_video, "Exclude video tracks (saves bandwidth and disk space)");
+                ui.checkbox(
+                    &mut self.config.beatmaps.skip_existing,
+                    "Skip beatmaps already installed in stable Songs/",
+                );
+                ui.checkbox(
+                    &mut self.config.beatmaps.no_video,
+                    "Exclude video tracks (saves bandwidth and disk space)",
+                );
             });
 
             ui.add_space(10.0);
-            ui.label(format!("Online beatmap sets found in lazer: {}", self.beatmaps.len()));
+            ui.label(format!(
+                "Online beatmap sets found in lazer: {}",
+                self.beatmaps.len()
+            ));
         });
     }
 
@@ -584,14 +734,23 @@ impl Lazer2StableApp {
         ui.heading("Skins Migration");
         ui.add_space(6.0);
 
-        ui.checkbox(&mut self.config.skins.enabled, "Enable custom skins migration");
+        ui.checkbox(
+            &mut self.config.skins.enabled,
+            "Enable custom skins migration",
+        );
         ui.add_space(8.0);
 
         // Dim and disable settings when skin migration is toggled off
         ui.add_enabled_ui(self.config.skins.enabled, |ui| {
             ui.horizontal_wrapped(|ui| {
-                ui.checkbox(&mut self.config.skins.unpack_to_stable, "Unpack directly to stable Skins/ folder");
-                ui.checkbox(&mut self.config.skins.export_as_osk, "Save packaged .osk archive to exports");
+                ui.checkbox(
+                    &mut self.config.skins.unpack_to_stable,
+                    "Unpack directly to stable Skins/ folder",
+                );
+                ui.checkbox(
+                    &mut self.config.skins.export_as_osk,
+                    "Save packaged .osk archive to exports",
+                );
             });
 
             ui.add_space(8.0);
@@ -603,7 +762,11 @@ impl Lazer2StableApp {
                 if ui.button("Deselect All").clicked() {
                     self.selected_skins.clear();
                 }
-                ui.label(format!("Selected {} of {} skin(s)", self.selected_skins.len(), self.skins.len()));
+                ui.label(format!(
+                    "Selected {} of {} skin(s)",
+                    self.selected_skins.len(),
+                    self.skins.len()
+                ));
             });
 
             ui.separator();
@@ -626,9 +789,15 @@ impl Lazer2StableApp {
                                     }
                                 }
                                 ui.label(RichText::new(&skin.name).strong());
-                                ui.label(RichText::new(format!("({} files)", skin.files.len())).weak());
+                                ui.label(
+                                    RichText::new(format!("({} files)", skin.files.len())).weak(),
+                                );
                                 if !skin.creator.is_empty() {
-                                    ui.label(RichText::new(format!("by {}", skin.creator)).italics().weak());
+                                    ui.label(
+                                        RichText::new(format!("by {}", skin.creator))
+                                            .italics()
+                                            .weak(),
+                                    );
                                 }
                             });
                         }
@@ -678,12 +847,18 @@ impl Lazer2StableApp {
 
         ui.horizontal(|ui| {
             ui.label("Network Concurrency:");
-            ui.add(egui::Slider::new(&mut self.config.beatmaps.concurrency, 1..=16));
+            ui.add(egui::Slider::new(
+                &mut self.config.beatmaps.concurrency,
+                1..=16,
+            ));
         });
 
         ui.add_space(14.0);
 
-        if ui.button(RichText::new("Save Configuration").strong()).clicked() {
+        if ui
+            .button(RichText::new("Save Configuration").strong())
+            .clicked()
+        {
             if let Err(e) = self.config.save(&self.config_path) {
                 self.status_text = format!("Failed to save config: {}", e);
             } else {
@@ -716,7 +891,10 @@ fn render_path_field(ui: &mut Ui, label: &str, path_opt: &mut Option<PathBuf>, h
             };
         }
 
-        if ui.add_sized(vec2(btn_width, 24.0), egui::Button::new("Browse...")).clicked() {
+        if ui
+            .add_sized(vec2(btn_width, 24.0), egui::Button::new("Browse..."))
+            .clicked()
+        {
             if let Some(folder) = rfd::FileDialog::new().pick_folder() {
                 *path_opt = Some(folder);
             }

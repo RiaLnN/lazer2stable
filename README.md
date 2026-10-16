@@ -59,7 +59,7 @@ lazer_to_stable/
 
 Build the C# realm bridge:
 ```bash
-dotnet build -c Release
+dotnet build bridge/BeatmapDump.csproj -c Release
 ```
 
 Build the Rust workspace (both CLI and GUI):
@@ -70,7 +70,7 @@ cargo build --release
 The resulting binaries will be located at:
 - `target/release/lazer2stable-gui` (Graphical Desktop App)
 - `target/release/lazer2stable-cli` (Command-Line Tool)
-- `bin/Release/net8.0/realm-bridge.dll` (Bridge)
+- `bridge/bin/Release/net8.0/realm-bridge.dll` (Bridge)
 
 ---
 

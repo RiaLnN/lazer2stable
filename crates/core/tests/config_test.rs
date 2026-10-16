@@ -5,7 +5,10 @@ fn test_default_config_serialization() {
     let config = Config::default();
     let toml_str = toml::to_string(&config).expect("failed to serialize");
     let deserialized: Config = toml::from_str(&toml_str).expect("failed to deserialize");
-    assert_eq!(config.beatmaps.concurrency, deserialized.beatmaps.concurrency);
+    assert_eq!(
+        config.beatmaps.concurrency,
+        deserialized.beatmaps.concurrency
+    );
     assert_eq!(config.beatmaps.source_mode, "network");
     assert!(config.beatmaps.enabled);
     assert!(config.skins.enabled);
@@ -27,8 +30,10 @@ fn test_config_save_and_load() {
 #[test]
 fn test_detector_lazer_dir() {
     let lazer_dir = lazer2stable_core::detector::detect_lazer_dir();
-    assert!(lazer_dir.is_some(), "lazer installation should be detected on this machine");
+    assert!(
+        lazer_dir.is_some(),
+        "lazer installation should be detected on this machine"
+    );
     let realm = lazer2stable_core::detector::default_realm_path(&lazer_dir.unwrap());
     assert!(realm.exists(), "detected client.realm file should exist");
 }
-

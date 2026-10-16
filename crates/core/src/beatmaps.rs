@@ -115,7 +115,10 @@ pub fn assemble_from_lazer(
     }
 
     zip.finish()?;
-    debug!("Successfully assembled local .osz for set {}", set.online_id);
+    debug!(
+        "Successfully assembled local .osz for set {}",
+        set.online_id
+    );
     Ok(target_osz.to_path_buf())
 }
 
@@ -130,14 +133,18 @@ pub fn open_in_stable(osz_path: &Path, stable_exe: Option<&Path>) -> Result<()> 
 
     #[cfg(target_os = "windows")]
     {
-        std::process::Command::new("explorer").arg(osz_path).spawn()?;
+        std::process::Command::new("explorer")
+            .arg(osz_path)
+            .spawn()?;
         return Ok(());
     }
 
     #[cfg(target_os = "linux")]
     {
         // Try xdg-open on Linux
-        std::process::Command::new("xdg-open").arg(osz_path).spawn()?;
+        std::process::Command::new("xdg-open")
+            .arg(osz_path)
+            .spawn()?;
         return Ok(());
     }
 

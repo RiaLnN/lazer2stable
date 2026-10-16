@@ -129,7 +129,11 @@ pub fn export_skin(
                 );
             }
         }
-        debug!("Successfully unpacked skin '{}' to {}", skin.name, dest_folder.display());
+        debug!(
+            "Successfully unpacked skin '{}' to {}",
+            skin.name,
+            dest_folder.display()
+        );
     }
 
     Ok(())

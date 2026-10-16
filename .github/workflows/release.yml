@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag (e.g. v0.1.0)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows Release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish C# Realm Bridge (Self-Contained)
+        run: |
+          dotnet publish bridge/BeatmapDump.csproj -c Release -r win-x64 --self-contained true -o dist/bridge
+
+      - name: Build Rust Workspace
+        run: cargo build --release --workspace
+
+      - name: Prepare Release Package
+        shell: pwsh
+        run: |
+          Copy-Item target/release/lazer2stable-gui.exe dist/
+          Copy-Item target/release/lazer2stable-cli.exe dist/
+          Copy-Item config.example.toml dist/
+          Copy-Item README.md dist/
+          Compress-Archive -Path dist/* -DestinationPath lazer2stable-windows-x64.zip
+
+      - name: Upload Windows Asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-asset
+          path: lazer2stable-windows-x64.zip
+
+  build-linux:
+    name: Build Linux Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Linux GUI Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev libgtk-3-dev
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish C# Realm Bridge (Self-Contained)
+        run: |
+          dotnet publish bridge/BeatmapDump.csproj -c Release -r linux-x64 --self-contained true -o dist/bridge
+
+      - name: Build Rust Workspace
+        run: cargo build --release --workspace
+
+      - name: Prepare Release Package
+        run: |
+          cp target/release/lazer2stable-gui dist/
+          cp target/release/lazer2stable-cli dist/
+          cp config.example.toml dist/
+          cp README.md dist/
+          chmod +x dist/lazer2stable-gui dist/lazer2stable-cli dist/bridge/realm-bridge
+          tar -czvf lazer2stable-linux-x64.tar.gz -C dist .
+
+      - name: Upload Linux Asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-asset
+          path: lazer2stable-linux-x64.tar.gz
+
+  publish:
+    name: Publish GitHub Release
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Windows Asset
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-asset
+
+      - name: Download Linux Asset
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-asset
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          files: |
+            lazer2stable-windows-x64.zip
+            lazer2stable-linux-x64.tar.gz
+          generate_release_notes: true
+          draft: false
+          prerelease: false

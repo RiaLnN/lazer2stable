@@ -13,7 +13,8 @@ fn test_models_deserialization() {
             ]
         }
     ]"#;
-    let sets: Vec<BeatmapSetDump> = serde_json::from_str(beatmaps_json).expect("failed to parse beatmaps");
+    let sets: Vec<BeatmapSetDump> =
+        serde_json::from_str(beatmaps_json).expect("failed to parse beatmaps");
     assert_eq!(sets.len(), 1);
     assert_eq!(sets[0].online_id, 12345);
     assert_eq!(sets[0].title, "Galaxy Collapse");
