@@ -1,0 +1,7 @@
+[package]
+name = "lazer2stable-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lazer2stable-core = { path = "../core" }

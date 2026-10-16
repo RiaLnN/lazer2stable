@@ -1,0 +1,17 @@
+[package]
+name = "lazer2stable-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["lazer2stable contributors"]
+description = "Core library for migrating osu!lazer beatmaps and skins to osu!stable"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+directories = "5.0"
+thiserror = "2.0"
+anyhow = "1.0"
+tracing = "0.1"
+
+[dev-dependencies]
+tempfile = "3.17"
