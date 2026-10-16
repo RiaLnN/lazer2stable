@@ -28,7 +28,7 @@ Your lazer data is **never modified**. The tool only reads from it.
 
 ## Download
 
-1. Open the [**Releases page**](https://github.com/<your-username>/lazer2stable/releases/latest).
+1. Open the [**Releases page**](https://github.com/RiaLnN/lazer2stable/releases/latest).
 2. Download the archive for your system:
 
 | System | File |
