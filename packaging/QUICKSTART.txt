@@ -1,0 +1,21 @@
+lazer2stable __VERSION__ (__PLATFORM__)
+=====================================
+
+Migrates beatmaps and custom skins from osu!lazer to osu!stable.
+
+1. Close osu!lazer (so client.realm is not locked).
+2. Start the app:
+   - GUI: run lazer2stable-gui
+   - CLI: run lazer2stable-cli --dry-run to preview, then lazer2stable-cli
+3. Paths to lazer and stable are auto-detected. If detection fails, set them
+   in the Settings tab (GUI) or pass --realm / --stable-dir (CLI).
+
+Optional: copy config.example.toml to config.toml to change defaults
+(network/local mode, concurrency, skipping videos, etc.).
+
+Keep the "bridge" folder next to the executables, it is required.
+No .NET or Rust installation is needed.
+
+Your lazer data is never modified (read-only access).
+
+Full documentation: README.md
