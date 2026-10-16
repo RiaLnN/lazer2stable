@@ -1,4 +1,8 @@
 .venv
 osz_cache/
-bin/Debug/
-obj/Debug/
+bin/
+obj/
+target/
+.superpowers/
+*.user
+*.suo
