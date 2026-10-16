@@ -4,3 +4,4 @@ pub mod bridge;
 pub mod config;
 pub mod detector;
 pub mod models;
+pub mod skins;
