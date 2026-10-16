@@ -1,0 +1,187 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "realm-bridge/1.0.0": {
+        "dependencies": {
+          "Realm": "20.1.0"
+        },
+        "runtime": {
+          "realm-bridge.dll": {}
+        }
+      },
+      "MongoDB.Bson/2.21.0": {
+        "runtime": {
+          "lib/netstandard2.1/MongoDB.Bson.dll": {
+            "assemblyVersion": "2.21.0.0",
+            "fileVersion": "2.21.0.0"
+          }
+        }
+      },
+      "Realm/20.1.0": {
+        "dependencies": {
+          "MongoDB.Bson": "2.21.0",
+          "Remotion.Linq": "2.2.0"
+        },
+        "runtime": {
+          "lib/net8.0/Realm.dll": {
+            "assemblyVersion": "20.1.0.0",
+            "fileVersion": "20.1.0.0"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/android-arm/native/librealm-wrappers.so": {
+            "rid": "android-arm",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/android-arm64/native/librealm-wrappers.so": {
+            "rid": "android-arm64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/android-x64/native/librealm-wrappers.so": {
+            "rid": "android-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/android-x86/native/librealm-wrappers.so": {
+            "rid": "android-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/ios/native/realm-wrappers.framework/Info.plist": {
+            "rid": "ios",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/ios/native/realm-wrappers.framework/realm-wrappers": {
+            "rid": "ios",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/iossimulator/native/realm-wrappers.framework/Info.plist": {
+            "rid": "iossimulator",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/iossimulator/native/realm-wrappers.framework/_CodeSignature/CodeResources": {
+            "rid": "iossimulator",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/iossimulator/native/realm-wrappers.framework/realm-wrappers": {
+            "rid": "iossimulator",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-arm/native/librealm-wrappers.so": {
+            "rid": "linux-arm",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-arm64/native/librealm-wrappers.so": {
+            "rid": "linux-arm64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-x64/native/librealm-wrappers.so": {
+            "rid": "linux-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/maccatalyst/native/realm-wrappers.framework.zip": {
+            "rid": "maccatalyst",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/osx/native/librealm-wrappers.dylib": {
+            "rid": "osx",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/tvos/native/realm-wrappers.framework/Info.plist": {
+            "rid": "tvos",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/tvos/native/realm-wrappers.framework/realm-wrappers": {
+            "rid": "tvos",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/tvossimulator/native/realm-wrappers.framework/Info.plist": {
+            "rid": "tvossimulator",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/tvossimulator/native/realm-wrappers.framework/_CodeSignature/CodeResources": {
+            "rid": "tvossimulator",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/tvossimulator/native/realm-wrappers.framework/realm-wrappers": {
+            "rid": "tvossimulator",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-arm64/native/realm-wrappers.dll": {
+            "rid": "win-arm64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/realm-wrappers.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/realm-wrappers.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Remotion.Linq/2.2.0": {
+        "runtime": {
+          "lib/netstandard1.0/Remotion.Linq.dll": {
+            "assemblyVersion": "2.2.0.0",
+            "fileVersion": "2.2.0.30000"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "realm-bridge/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MongoDB.Bson/2.21.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-QT+D1I3Jz6r6S6kCgJD1L9dRCLVJCKlkGRkA+tJ7uLpHRmjDNcNKy4D1T+L9gQrjl95lDN9PHdwEytdvCW/jzA==",
+      "path": "mongodb.bson/2.21.0",
+      "hashPath": "mongodb.bson.2.21.0.nupkg.sha512"
+    },
+    "Realm/20.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-jDwR8r8gDZq3Mrlzx1MYtg7FodPFD4Kpku9QMh5Q0Lzia0nfTZo9/Q9ZMFGhwuZSv7T78EvMAr3LPm8iwR7wnQ==",
+      "path": "realm/20.1.0",
+      "hashPath": "realm.20.1.0.nupkg.sha512"
+    },
+    "Remotion.Linq/2.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-fK/76UmpC0FXBlGDFVPLJHQlDLYnGC+XY3eoDgCgbtrhi0vzbXDQ3n/IYHhqSKqXQfGw/u04A1drWs7rFVkRjw==",
+      "path": "remotion.linq/2.2.0",
+      "hashPath": "remotion.linq.2.2.0.nupkg.sha512"
+    }
+  }
+}

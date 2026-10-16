@@ -1,0 +1,4 @@
+.venv
+osz_cache/
+bin/Debug/
+obj/Debug/
