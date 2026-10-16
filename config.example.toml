@@ -1,0 +1,64 @@
+# lazer2stable configuration file
+
+[paths]
+# Optional override for the osu!lazer directory containing client.realm and files/
+# If omitted or empty, the application auto-detects the directory.
+# lazer_dir = ""
+
+# Optional override for the osu!stable root directory (containing osu!.exe, Songs/, and Skins/)
+# If omitted or empty, the application auto-detects the directory.
+# stable_dir = ""
+
+# Path to client.realm (defaults to lazer_dir/client.realm if not set)
+# realm_path = ""
+
+# Path to stable Songs directory (defaults to stable_dir/Songs if not set)
+# songs_dir = ""
+
+# Path to stable Skins directory (defaults to stable_dir/Skins if not set)
+# skins_dir = ""
+
+# Cache directory for temporary files, downloaded .osz archives, and exported skins
+cache_dir = "cache"
+
+# Optional explicit path to compiled realm-bridge binary
+# bridge_binary = ""
+
+[beatmaps]
+# Enable or disable beatmap migration
+enabled = true
+
+# Beatmap source mode:
+# - "network": downloads latest official .osz from online mirrors (recommended)
+# - "local": assembles .osz offline directly from lazer's content-addressed files/ store
+source_mode = "network"
+
+# Beatmap delivery target:
+# - "extract": extracts beatmaps directly into Songs/<id>/ (fast and reliable for thousands of maps)
+# - "open": launches each .osz through osu!.exe
+delivery_mode = "extract"
+
+# Exclude video files to save internet bandwidth and disk space
+no_video = false
+
+# Skip downloading/importing beatmaps already found in stable's Songs folder
+skip_existing = true
+
+# Number of concurrent network downloads
+concurrency = 4
+
+# Prioritized mirror list (fallbacks are tried in order upon 404 or connection failures)
+sources = ["catboy", "nerinyan", "osudirect"]
+
+# Optional osu_session cookie if you want to enable downloading from the official osu.ppy.sh website
+# osu_session = ""
+
+[skins]
+# Enable or disable custom skins migration
+enabled = true
+
+# Package and save exported skins as standalone .osk zip archives in cache/skins
+export_as_osk = true
+
+# Directly unpack skin files into stable's Skins/<skin_name>/ folder
+unpack_to_stable = true

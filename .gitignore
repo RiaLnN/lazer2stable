@@ -6,3 +6,5 @@ target/
 .superpowers/
 *.user
 *.suo
+config.toml
+
